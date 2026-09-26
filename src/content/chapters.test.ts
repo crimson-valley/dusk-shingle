@@ -1,9 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { getAdjacentChapters, getChapterBySlug, getPublishedChapters } from './chapters';
 
-// The initial repository contains no published prose. These assertions keep
-// the public boundary explicit while the publication source is extended.
 describe('public chapter source', () => {
+  it('publishes Chapter 1 from the authoritative Markdown while excluding its internal navigation metadata', () => {
+    const chapter = getChapterBySlug('the-dry-pump');
+    expect(chapter).toMatchObject({ number: 1, title: 'THE DRY PUMP', status: 'published' });
+    expect(chapter?.blocks[0]).toEqual({ type: 'paragraph', text: 'At 04:17, Pump Seven stopped.' });
+    expect(chapter?.blocks.at(-1)).toEqual({
+      type: 'paragraph',
+      text: 'For the first time that morning, he trusted the ugly numbers.',
+    });
+    expect(chapter?.blocks.map((block) => JSON.stringify(block)).join(' ')).not.toContain('app.notion.com');
+    expect(chapter?.blocks).toHaveLength(209);
+  });
   it('does not expose unpublished material', () => {
     expect(getPublishedChapters().every((chapter) => chapter.status === 'published')).toBe(true);
   });

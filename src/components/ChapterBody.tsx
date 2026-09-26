@@ -1,8 +1,18 @@
+import type { ReactNode } from 'react';
 import type { ChapterBlock } from '../types';
 
 type ChapterBodyProps = {
   blocks: ChapterBlock[];
 };
+
+function renderInlineMarkdown(text: string): ReactNode[] {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={`strong-${index}`}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+}
 
 export function ChapterBody({ blocks }: ChapterBodyProps) {
   return (
@@ -15,13 +25,13 @@ export function ChapterBody({ blocks }: ChapterBodyProps) {
         if (block.type === 'epigraph') {
           return (
             <figure className="chapter-epigraph" key={`epigraph-${index}`}>
-              <blockquote>{block.text}</blockquote>
+              <blockquote>{renderInlineMarkdown(block.text)}</blockquote>
               {block.attribution && <figcaption>{block.attribution}</figcaption>}
             </figure>
           );
         }
 
-        return <p key={`paragraph-${index}`}>{block.text}</p>;
+        return <p key={`paragraph-${index}`}>{renderInlineMarkdown(block.text)}</p>;
       })}
     </div>
   );

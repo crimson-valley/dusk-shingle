@@ -1,13 +1,30 @@
-import type { Chapter } from '../types';
+import type { Chapter, ChapterBlock } from '../types';
+import chapterOneMarkdown from './chapters/chapter-001.md?raw';
 
-/**
- * The public publication source.
- *
- * Keep this collection limited to material that is deliberately published for
- * readers. Future chapters can be added here without changing the library,
- * route, or navigation components.
- */
-export const chapters: Chapter[] = [];
+/** Parse only the prose section after the source document's metadata divider. */
+function parsePublishedProse(markdown: string): ChapterBlock[] {
+  const prose = markdown.split(/^---\s*$/m).slice(1).join('\n---\n');
+  return prose
+    .trim()
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((text) => ({ type: 'paragraph', text }));
+}
+
+const title = chapterOneMarkdown.match(/^#\s+CHAPTER\s+001\s+—\s+(.+)$/m)?.[1]?.trim() ?? 'The Dry Pump';
+
+/** Public publication source: only explicitly published reader-ready material belongs here. */
+export const chapters: Chapter[] = [
+  {
+    slug: 'the-dry-pump',
+    number: 1,
+    title,
+    publishedLabel: '26 September 2026',
+    status: 'published',
+    blocks: parsePublishedProse(chapterOneMarkdown),
+  },
+];
 
 export function getPublishedChapters(): Chapter[] {
   return chapters
