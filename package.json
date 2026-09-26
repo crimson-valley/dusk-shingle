@@ -5,6 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "node --import tsx server/dev.ts & vite",
+    "sitemap": "node --import tsx scripts/generate-sitemap.ts",
+    "predev": "npm run sitemap",
+    "predev:web": "npm run sitemap",
+    "prebuild": "npm run sitemap",
+    "pretest": "npm run sitemap",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview",
     "lint": "eslint .",

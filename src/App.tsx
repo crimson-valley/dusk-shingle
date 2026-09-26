@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { getAdjacentChapters, getChapterBySlug } from './content/chapters';
 import { SiteHeader } from './components/SiteHeader';
 import { ReaderProvider, useReader } from './lib/reader';
+import { PUBLIC_ORIGIN, indexablePath, publicUrl } from './lib/publicUrls';
+import { publication } from './content/publication';
+import { matchRoute, type Route } from './lib/routes';
 import { LibraryPage } from './pages/LibraryPage';
 import { ChapterPage } from './pages/ChapterPage';
 import { DiscussionPage } from './pages/DiscussionPage';
@@ -12,35 +15,6 @@ import { NotFoundPage } from './pages/NotFoundPage';
 
 function currentPath() {
   return window.location.pathname.replace(/\/+$/, '') || '/';
-}
-
-type Route =
-  | { name: 'library' }
-  | { name: 'chapter'; slug: string }
-  | { name: 'discussion'; slug: string }
-  | { name: 'discussions' }
-  | { name: 'account' }
-  | { name: 'moderation' }
-  | { name: 'not-found' };
-
-function decode(s: string) {
-  try {
-    return decodeURIComponent(s);
-  } catch {
-    return '';
-  }
-}
-
-function matchRoute(path: string): Route {
-  if (path === '/' || path === '/library') return { name: 'library' };
-  if (path === '/discussions') return { name: 'discussions' };
-  if (path === '/account') return { name: 'account' };
-  if (path === '/moderation') return { name: 'moderation' };
-  let m = path.match(/^\/chapter\/([^/]+)\/discussion$/);
-  if (m) return { name: 'discussion', slug: decode(m[1]) };
-  m = path.match(/^\/chapter\/([^/]+)$/);
-  if (m) return { name: 'chapter', slug: decode(m[1]) };
-  return { name: 'not-found' };
 }
 
 export default function App() {
@@ -56,6 +30,7 @@ function Shell() {
   const { prefs } = useReader();
   const route = matchRoute(pathname);
   const chapter = 'slug' in route ? getChapterBySlug(route.slug) : undefined;
+  const canonicalPath = indexablePath(route, chapter);
 
   useEffect(() => {
     const onPop = () => setPathname(currentPath());
@@ -91,6 +66,42 @@ function Shell() {
     };
     document.title = titles[route.name];
   }, [route.name, chapter]);
+
+  useEffect(() => {
+    // Only published reader pages have canonical URLs. /library is a legacy alias
+    // of /; unknown chapters, account management and moderation are not indexable.
+    const isProduction = window.location.origin === PUBLIC_ORIGIN;
+    let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (canonicalPath) {
+      if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.rel = 'canonical';
+        document.head.append(canonical);
+      }
+      canonical.href = publicUrl(canonicalPath);
+    } else {
+      canonical?.remove();
+    }
+
+    let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    if (!robots) {
+      robots = document.createElement('meta');
+      robots.name = 'robots';
+      document.head.append(robots);
+    }
+    robots.content = canonicalPath && isProduction ? 'index, follow' : 'noindex, nofollow';
+
+    const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    if (description) {
+      description.content = route.name === 'chapter' && chapter
+        ? `Read ${chapter.title}, chapter ${chapter.number} of Dusk Shingle.`
+        : route.name === 'discussion' && chapter
+          ? `Discuss ${chapter.title} with readers of Dusk Shingle.`
+          : route.name === 'discussions'
+            ? 'Chapter-by-chapter conversations about Dusk Shingle.'
+            : publication.description;
+    }
+  }, [route.name, chapter, canonicalPath]);
 
   let page;
   switch (route.name) {
