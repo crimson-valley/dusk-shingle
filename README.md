@@ -13,7 +13,7 @@ The app is a small Vite + React + TypeScript single-page application. It uses th
 
 ## Publication source
 
-Public chapter data lives in `src/content/chapters.ts`. Only entries with `status: 'published'` are exposed to the library and chapter routes. The current repository does not contain any published prose, so the reader currently presents the empty public-edition state rather than inventing or exposing story content. Add published chapters to the collection when reader-ready material exists; the library, chapter renderer, progress indicator, settings, and previous/next navigation will use them automatically.
+Public chapter data lives in `src/content/chapters.ts`; the authoritative Markdown source for Chapter 1 is `src/content/chapters/chapter-001.md`. Only entries with `status: 'published'` are exposed to the library and chapter routes. The chapter parser uses only the prose after the source metadata divider, so the source's internal reader-navigation metadata is not rendered publicly. The library, chapter renderer, progress indicator, settings, and previous/next navigation use the published collection automatically.
 
 Each chapter supports:
 

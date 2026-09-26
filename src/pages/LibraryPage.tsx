@@ -26,7 +26,7 @@ export function LibraryPage() {
         </div>
         <div className="hero-aside">
           <p className="aside-label">A reader’s library</p>
-          <p>When a first page is ready, this is where reading will begin.</p>
+          <p>Read the published chapters of Dusk Shingle at your own pace.</p>
         </div>
       </section>
 
@@ -89,7 +89,7 @@ export function LibraryPage() {
         <div>
           <span className="section-index">02</span>
           <h2 id="note-title">A place for the text.</h2>
-          <p>There is nothing else to keep up with here. When a chapter arrives, this is where it will begin.</p>
+          <p>There is nothing else to keep up with here. Choose a chapter from the library whenever you are ready to read.</p>
         </div>
       </section>
 
