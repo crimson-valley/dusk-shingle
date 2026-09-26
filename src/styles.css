@@ -657,6 +657,43 @@ a {
   line-height: 1.55;
 }
 
+.title-note {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 40rem);
+  gap: 1rem;
+  padding-top: 2.3rem;
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.title-note .note-mark {
+  padding-top: 0.3rem;
+}
+
+.title-note-label {
+  display: block;
+  margin-bottom: 0.85rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.13em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.title-note p {
+  max-width: 33rem;
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: clamp(1.05rem, 1.6vw, 1.26rem);
+  line-height: 1.6;
+}
+
+.title-note p em {
+  color: var(--accent);
+}
+
 .publication-footer {
   width: min(100% - (var(--page-gutter) * 2), 1280px);
   margin: 0 auto;
@@ -693,6 +730,21 @@ a {
   color: var(--ink);
   font-weight: 650;
   text-decoration: none;
+}
+
+.footer-title-note {
+  max-width: 36rem;
+  margin: 2.3rem 0 0;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.footer-title-note em {
+  color: var(--ink);
 }
 
 /* Reading view */
@@ -1190,6 +1242,22 @@ a {
     gap: 0.75rem;
     margin-top: 8rem;
     margin-bottom: 8rem;
+  }
+
+  .title-note {
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+    gap: 0.75rem;
+    padding-top: 1.8rem;
+    padding-bottom: 2rem;
+  }
+
+  .title-note p {
+    font-size: 1.02rem;
+  }
+
+  .footer-title-note {
+    margin-top: 2rem;
+    font-size: 0.82rem;
   }
 
   .library-note h2 {

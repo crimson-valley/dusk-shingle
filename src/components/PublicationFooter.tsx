@@ -16,6 +16,10 @@ export function PublicationFooter({ chapterMode = false }: PublicationFooterProp
         <p>{publication.editionLabel}<br />{publication.statusLabel}</p>
         <p className="footer-right">A quiet place for the published text.</p>
       </div>
+      <p className="footer-title-note">
+        <em>{publication.title}</em> is the name of the project under which this novel
+        belongs — the novel’s true name will be revealed in due time.
+      </p>
     </footer>
   );
 }

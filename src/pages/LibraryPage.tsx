@@ -3,6 +3,7 @@ import { publication } from '../content/publication';
 import { Link } from '../components/Link';
 import { Icon } from '../components/Icon';
 import { PublicationFooter } from '../components/PublicationFooter';
+import { TitleNote } from '../components/TitleNote';
 
 function chapterNumber(number: number) {
   return String(number).padStart(2, '0');
@@ -44,6 +45,8 @@ export function LibraryPage() {
           <span className="overview-value">{latestChapter ? `Chapter ${chapterNumber(latestChapter.number)}` : 'Not yet set'}</span>
         </div>
       </section>
+
+      <TitleNote />
 
       <section className="library-shelf page-width" aria-labelledby="shelf-title">
         <div className="section-heading">
