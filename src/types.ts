@@ -21,4 +21,5 @@ export type Publication = {
   description: string;
   statusLabel: string;
   editionLabel: string;
+  titleNoteLabel: string;
 };
