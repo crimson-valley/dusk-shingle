@@ -1,101 +1,81 @@
-import { getPublishedChapters } from '../content/chapters';
+import { getPublishedChapters, wordCount } from '../content/chapters';
 import { publication } from '../content/publication';
 import { Link } from '../components/Link';
 import { Icon } from '../components/Icon';
 import { PublicationFooter } from '../components/PublicationFooter';
 import { TitleNote } from '../components/TitleNote';
-
-function chapterNumber(number: number) {
-  return String(number).padStart(2, '0');
-}
+import { useReader } from '../lib/reader';
+import { chapterNumber, readingMinutes } from '../lib/format';
 
 export function LibraryPage() {
-  const publishedChapters = getPublishedChapters();
-  const latestChapter = publishedChapters[publishedChapters.length - 1];
+  const chapters = getPublishedChapters();
+  const { vault } = useReader();
+  const latest = chapters[chapters.length - 1];
+  const last = vault.last && chapters.find((c) => c.slug === vault.last!.slug);
+  const lastState = last ? vault.chapters[last.slug] : undefined;
+  const firstUnread = chapters.find((c) => !vault.chapters[c.slug]?.completed);
+
+  let cta: { href: string; label: string; detail: string } | undefined;
+  if (last && lastState && !lastState.completed) {
+    cta = { href: `/chapter/${last.slug}`, label: 'Continue reading', detail: `Chapter ${chapterNumber(last.number)} · ${Math.round(lastState.progress * 100)}% read` };
+  } else if (firstUnread) {
+    const started = Object.keys(vault.chapters).length > 0;
+    cta = { href: `/chapter/${firstUnread.slug}`, label: started ? 'Read the next chapter' : 'Begin reading', detail: `Chapter ${chapterNumber(firstUnread.number)} · ${firstUnread.title}` };
+  }
 
   return (
-    <main id="main" className="library-page">
-      <section className="library-hero page-width" aria-labelledby="library-title">
-        <div className="hero-rail">
-          <span className="eyebrow">{publication.editionLabel}</span>
-          <span className="hero-index">00 / 00</span>
-        </div>
-        <div className="hero-copy">
-          <p className="hero-kicker">{publication.statusLabel}</p>
-          <h1 id="library-title"><span>Dusk</span> Shingle</h1>
-          <p className="hero-description">{publication.description}</p>
-        </div>
-        <div className="hero-aside">
-          <p className="aside-label">A reader’s library</p>
-          <p>Read the published chapters of Dusk Shingle at your own pace.</p>
-        </div>
-      </section>
-
-      <section className="publication-overview page-width" aria-label="Publication overview">
-        <div className="overview-item">
-          <span className="overview-label">Edition</span>
-          <span className="overview-value">{publication.editionLabel}</span>
-        </div>
-        <div className="overview-item">
-          <span className="overview-label">Published chapters</span>
-          <span className="overview-value">{chapterNumber(publishedChapters.length)}</span>
-        </div>
-        <div className="overview-item">
-          <span className="overview-label">Current page</span>
-          <span className="overview-value">{latestChapter ? `Chapter ${chapterNumber(latestChapter.number)}` : 'Not yet set'}</span>
-        </div>
-      </section>
-
-      <TitleNote />
-
-      <section className="library-shelf page-width" aria-labelledby="shelf-title">
-        <div className="section-heading">
-          <div>
-            <span className="section-index">01</span>
-            <h2 id="shelf-title">The library</h2>
+    <main id="main" className="library">
+      <section className="library-intro page" aria-labelledby="library-title">
+        <p className="meta-label">{publication.editionLabel} · {publication.statusLabel}</p>
+        <h1 id="library-title" className="library-title">Dusk Shingle</h1>
+        <p className="library-lede">{publication.description}</p>
+        {cta ? (
+          <div className="library-cta">
+            <Link className="btn btn-primary" href={cta.href}>{cta.label}<Icon name="arrow-right" /></Link>
+            <span className="meta">{cta.detail}</span>
           </div>
-          {latestChapter && (
-            <Link className="text-link" href={`/chapter/${latestChapter.slug}`}>
-              Continue reading <Icon name="arrow-right" />
-            </Link>
-          )}
-        </div>
+        ) : chapters.length > 0 ? (
+          <p className="library-cta meta">You have read every published chapter. The next will appear here.</p>
+        ) : null}
+      </section>
 
-        {publishedChapters.length > 0 ? (
-          <div className="chapter-list">
-            {publishedChapters.map((chapter) => (
-              <Link className="chapter-row" href={`/chapter/${chapter.slug}`} key={chapter.slug}>
-                <span className="chapter-row-number">{chapterNumber(chapter.number)}</span>
-                <span className="chapter-row-main">
-                  {chapter.volume && <span className="chapter-row-volume">{chapter.volume}</span>}
-                  <span className="chapter-row-title">{chapter.title}</span>
-                </span>
-                <span className="chapter-row-meta">{chapter.publishedLabel ?? 'Published'}</span>
-                <Icon name="arrow-right" />
-              </Link>
-            ))}
+      <section className="contents page" aria-labelledby="contents-title">
+        <div className="section-head">
+          <h2 id="contents-title" className="meta-label">Contents</h2>
+          <span className="meta">{chapters.length} published{latest ? ` · latest ${latest.publishedLabel ?? `chapter ${chapterNumber(latest.number)}`}` : ''}</span>
+        </div>
+        {chapters.length === 0 ? (
+          <div className="empty">
+            <p className="empty-title">Nothing has been published yet.</p>
+            <p>Chapters will take their place here as they are released.</p>
           </div>
         ) : (
-          <div className="empty-shelf">
-            <div className="empty-shelf-mark" aria-hidden="true">—</div>
-            <div className="empty-shelf-copy">
-              <h3>The public edition is quiet for now.</h3>
-              <p>Published chapters will take their place here when they are ready to be read.</p>
-            </div>
-            <span className="empty-shelf-status">No chapters published</span>
-          </div>
+          <ol className="toc">
+            {chapters.map((chapter) => {
+              const state = vault.chapters[chapter.slug];
+              const status = state?.completed ? 'Read' : state && state.progress > 0.01 ? `${Math.round(state.progress * 100)}%` : 'Unread';
+              return (
+                <li key={chapter.slug}>
+                  <Link className="toc-row" href={`/chapter/${chapter.slug}`} data-state={state?.completed ? 'read' : state ? 'started' : 'unread'}>
+                    <span className="toc-num">{chapterNumber(chapter.number)}</span>
+                    <span className="toc-title">
+                      {chapter.title}
+                      {chapter === latest && chapters.length > 1 && <span className="toc-flag">Latest</span>}
+                    </span>
+                    <span className="toc-meta">{chapter.publishedLabel} · {readingMinutes(wordCount(chapter))} min</span>
+                    <span className="toc-status">
+                      {state?.completed && <Icon name="check" size={14} />}
+                      <span className="visually-hidden">Status: </span>{status}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ol>
         )}
       </section>
 
-      <section className="library-note page-width" aria-labelledby="note-title">
-        <div className="note-mark" aria-hidden="true"><span /><span /><span /></div>
-        <div>
-          <span className="section-index">02</span>
-          <h2 id="note-title">A place for the text.</h2>
-          <p>There is nothing else to keep up with here. Choose a chapter from the library whenever you are ready to read.</p>
-        </div>
-      </section>
-
+      <TitleNote />
       <PublicationFooter />
     </main>
   );

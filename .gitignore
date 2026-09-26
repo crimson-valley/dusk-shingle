@@ -10,3 +10,5 @@ vitest.config.d.ts
 .env.*
 !.env.example
 .DS_Store
+.data/
+.vercel
