@@ -1,0 +1,18 @@
+# robots.txt — Dusk Shingle (https://dusk-shingle.vercel.app)
+#
+# Crawler directives only. This file is not a security mechanism: private data
+# is protected by the application and API regardless of what is written here.
+
+# The public reader: library, chapters, chapter discussions, discussions index.
+User-agent: *
+Allow: /
+Allow: /chapter/
+Allow: /discussions
+
+# Private reader surfaces: account management, moderation, and the API.
+# These pages additionally send `X-Robots-Tag: noindex` and a noindex meta.
+Disallow: /account
+Disallow: /moderation
+Disallow: /api
+
+Sitemap: https://dusk-shingle.vercel.app/sitemap.xml
