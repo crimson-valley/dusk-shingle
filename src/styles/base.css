@@ -1,0 +1,61 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  background: var(--surface-page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  scroll-padding-top: calc(var(--masthead-h) + var(--space-4));
+}
+
+body { margin: 0; min-width: 20rem; min-height: 100vh; line-height: 1.5; }
+body, .app { background: var(--surface-page); transition: background-color var(--dur-2) var(--ease), color var(--dur-2) var(--ease); }
+
+h1, h2, h3, p, ol, ul, dl, dd, figure, blockquote { margin: 0; }
+ol, ul { padding: 0; list-style: none; }
+img, svg { display: block; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+button:disabled { cursor: not-allowed; }
+code { font-family: var(--font-mono); font-size: 0.88em; }
+a { color: inherit; text-decoration-thickness: var(--hairline); text-underline-offset: 0.2em; }
+::selection { background: var(--accent-quiet); color: var(--ink); }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-1);
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+.skip-link {
+  position: fixed; top: var(--space-2); left: var(--space-2); z-index: 100;
+  padding: var(--space-2) var(--space-4); background: var(--ink); color: var(--surface-page);
+  font-size: var(--text-ui); text-decoration: none; border-radius: var(--radius-1);
+  transform: translateY(-200%);
+}
+.skip-link:focus { transform: none; }
+
+.page { width: min(100% - 2 * var(--gutter), var(--page-max)); margin-inline: auto; }
+
+/* Metadata voice: mono, small, tracked */
+.meta-label {
+  font-family: var(--font-mono); font-size: var(--text-micro); font-weight: 500;
+  letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3);
+}
+.meta { font-family: var(--font-mono); font-size: var(--text-meta); color: var(--ink-3); letter-spacing: 0; }
+.field-hint { font-size: var(--text-meta); color: var(--ink-3); line-height: 1.5; }
+.field-hint svg { display: inline; vertical-align: -2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; scroll-behavior: auto !important; }
+}

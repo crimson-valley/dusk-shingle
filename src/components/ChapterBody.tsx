@@ -1,37 +1,27 @@
 import type { ReactNode } from 'react';
 import type { ChapterBlock } from '../types';
 
-type ChapterBodyProps = {
-  blocks: ChapterBlock[];
-};
-
-function renderInlineMarkdown(text: string): ReactNode[] {
-  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={`strong-${index}`}>{part.slice(2, -2)}</strong>;
-    }
-    return part;
-  });
+/** Author-controlled prose: supports **strong** only, rendered as React nodes. */
+function renderInline(text: string): ReactNode[] {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
+    part.startsWith('**') && part.endsWith('**') ? <strong key={index}>{part.slice(2, -2)}</strong> : part,
+  );
 }
 
-export function ChapterBody({ blocks }: ChapterBodyProps) {
+export function ChapterBody({ blocks }: { blocks: ChapterBlock[] }) {
   return (
-    <div className="chapter-body">
+    <div className="prose">
       {blocks.map((block, index) => {
-        if (block.type === 'section-break') {
-          return <div className="section-break" key={`break-${index}`} aria-hidden="true"><span>·</span><span>·</span><span>·</span></div>;
-        }
-
+        if (block.type === 'section-break') return <hr className="section-break" key={index} />;
         if (block.type === 'epigraph') {
           return (
-            <figure className="chapter-epigraph" key={`epigraph-${index}`}>
-              <blockquote>{renderInlineMarkdown(block.text)}</blockquote>
+            <figure className="epigraph" key={index}>
+              <blockquote>{renderInline(block.text)}</blockquote>
               {block.attribution && <figcaption>{block.attribution}</figcaption>}
             </figure>
           );
         }
-
-        return <p key={`paragraph-${index}`}>{renderInlineMarkdown(block.text)}</p>;
+        return <p key={index}>{renderInline(block.text)}</p>;
       })}
     </div>
   );

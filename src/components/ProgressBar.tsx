@@ -1,17 +1,8 @@
-import { useReadingProgress } from '../hooks/useReadingProgress';
-
-type ProgressBarProps = {
-  enabled: boolean;
-};
-
-export function ProgressBar({ enabled }: ProgressBarProps) {
-  const progress = useReadingProgress(enabled);
-
-  if (!enabled) return null;
-
+/** A single hairline along the top edge. Decorative: progress is also stated in text at the chapter end. */
+export function ProgressBar({ value }: { value: number }) {
   return (
-    <div className="progress-track" aria-hidden="true">
-      <div className="progress-value" style={{ transform: `scaleX(${progress})` }} />
+    <div className="progress" aria-hidden="true">
+      <div className="progress-value" style={{ transform: `scaleX(${value})` }} />
     </div>
   );
 }
