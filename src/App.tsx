@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getAdjacentChapters, getChapterBySlug } from './content/chapters';
+import { canonicalPathname, canonicalUrl } from './lib/seo';
 import { SiteHeader } from './components/SiteHeader';
 import { ReaderProvider, useReader } from './lib/reader';
 import { LibraryPage } from './pages/LibraryPage';
@@ -56,6 +57,7 @@ function Shell() {
   const { prefs } = useReader();
   const route = matchRoute(pathname);
   const chapter = 'slug' in route ? getChapterBySlug(route.slug) : undefined;
+  const slug = 'slug' in route ? route.slug : undefined;
 
   useEffect(() => {
     const onPop = () => setPathname(currentPath());
@@ -91,6 +93,37 @@ function Shell() {
     };
     document.title = titles[route.name];
   }, [route.name, chapter]);
+
+  // SEO: one canonical URL per indexable public page (kept consistent with
+  // sitemap.xml); account, moderation, unknown chapters and not-found carry a
+  // noindex meta and no canonical URL.
+  useEffect(() => {
+    const path = canonicalPathname({ name: route.name, slug, chapter });
+
+    let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (path) {
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'canonical';
+        document.head.appendChild(link);
+      }
+      link.href = canonicalUrl(path);
+    } else {
+      link?.remove();
+    }
+
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    if (path) {
+      meta?.remove();
+    } else {
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.name = 'robots';
+        document.head.appendChild(meta);
+      }
+      meta.content = 'noindex';
+    }
+  }, [route.name, slug, chapter]);
 
   let page;
   switch (route.name) {
