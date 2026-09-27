@@ -14,8 +14,15 @@ future Terms of Service and Privacy Policy, which are intentionally **not** writ
   Adding a chapter = one catalog entry + one source registration in `chapters.ts`.
 
 Environment: `DATABASE_URL` (or `POSTGRES_URL`) and `RATE_LIMIT_SECRET` (32+ random bytes). Server-only;
-nothing is exposed to the client bundle (no `VITE_*` variables are used). Without a database the API
-answers `503 not_configured` and the UI states that accounts/discussions are not connected; reading is unaffected.
+nothing is exposed to the client bundle (no `VITE_*` variables are used, and no `import.meta.env` in
+source). Without a database the API answers `503 not_configured`; with a database it cannot reach it
+answers `503 db_unavailable` and logs the driver code with the connection string, password and user
+name redacted, so an outage is diagnosable from `vercel logs` alone. `RATE_LIMIT_SECRET` is mandatory:
+a missing value throws rather than falling back to per-process random key material, which would
+silently reset every IP rate-limit bucket on each cold start.
+
+Test coverage caveat: handlers are verified against PGlite, so the `pg` connection options in
+`server/db.ts` are only exercised in production. `npm run verify:production` covers that gap.
 
 ## Anonymous accounts & keys
 

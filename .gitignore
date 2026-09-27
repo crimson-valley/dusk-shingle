@@ -6,9 +6,36 @@ vite.config.js
 vite.config.d.ts
 vitest.config.js
 vitest.config.d.ts
-.env
-.env.*
-!.env.example
 .DS_Store
 .data/
 .vercel
+
+# Local environment files and anything that could carry a secret. `.env.example`
+# is the only environment file that belongs in the repository, and it must stay
+# empty of real values.
+.env
+.env.*
+!.env.example
+
+# Credential and key material.
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+.netrc
+_netrc
+.npmrc
+credentials.json
+service-account*.json
+*credential*.local.json
+
+# Agent/tooling directories installed into the workspace by CLIs. These are
+# generated, not authored here, and must never be committed.
+skills/
+.agents/
+skills-lock.json

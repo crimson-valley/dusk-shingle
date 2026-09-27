@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x, 24.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Install
+      run: npm ci
+
+    - name: Lint
+      run: npm run lint
+
+    - name: Typecheck
+      run: npm run typecheck
+
+    # The API suite runs every handler against a real Postgres-protocol
+    # database (PGlite), so it is the closest thing to the production path.
+    - name: Test
+      run: npm test
+
+    - name: Build
+      run: npm run build

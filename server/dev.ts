@@ -14,7 +14,13 @@ const getDb = () => {
   const prod = getProductionDb();
   if (prod) return prod;
   mkdirSync('.data', { recursive: true });
-  return (local ??= createPgliteDb('.data/pglite'));
+  // Drop a failed initialisation so one bad start does not wedge the dev API
+  // for the lifetime of the process (getProductionDb resets the same way).
+  local ??= createPgliteDb('.data/pglite').catch((error) => {
+    local = undefined;
+    throw error;
+  });
+  return local;
 };
 
 const port = Number(process.env.API_PORT ?? 8787);

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- test assertions over untyped JSON responses */
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPgliteDb } from './pglite.js';
 import { handle } from './router.js';
 import type { Db } from './db.js';
@@ -8,6 +8,13 @@ import { deriveKeys, encryptJson, generateDataKey, generateReaderKey, unwrapData
 
 let db: Db;
 let ipCounter = 0;
+
+beforeAll(() => {
+  // Set the real key material the deployment uses. Without this the suite would
+  // pass on a per-process fallback and never notice that the IP rate limits are
+  // silently reset on every cold start.
+  process.env.RATE_LIMIT_SECRET = 'test-only-rate-limit-secret-0123456789abcdef';
+});
 
 beforeEach(async () => {
   db = await createPgliteDb();
@@ -100,6 +107,60 @@ describe('anonymous accounts', () => {
     expect(statuses.slice(5)).toEqual([429, 429]);
     const buckets = JSON.stringify((await db.query(`SELECT bucket FROM rate_events`)).rows);
     expect(buckets).not.toContain(c.ip);
+  });
+
+  it('refuses IP rate limits when RATE_LIMIT_SECRET is missing instead of using unstable key material', async () => {
+    const { authKey } = await deriveKeys(generateReaderKey());
+    const saved = process.env.RATE_LIMIT_SECRET;
+    delete process.env.RATE_LIMIT_SECRET;
+    try {
+      const res = await call(newClient(), 'POST', '/api/account', { authKey });
+      // Fails closed: a silently-resetting limit is worse than a visible outage.
+      expect(res.status).toBe(500);
+      // Authenticated per-account limits do not use this secret, so the rest of
+      // the product keeps working.
+      const { client } = { client: newClient() };
+      process.env.RATE_LIMIT_SECRET = saved;
+      const signIn = await call(client, 'POST', '/api/session', { authKey });
+      expect([401, 429]).toContain(signIn.status);
+    } finally {
+      process.env.RATE_LIMIT_SECRET = saved;
+    }
+  });
+
+  it('logs why the database is unavailable without leaking credentials', async () => {
+    const logged: string[] = [];
+    const spy = vi.spyOn(console, 'error').mockImplementation((line: unknown) => {
+      logged.push(String(line));
+    });
+    // Entirely synthetic, and on the reserved .invalid TLD (RFC 2606) so it can
+    // never name a real host. The point is to prove a realistic driver message is
+    // reduced to something safe before it reaches a log.
+    const connectionFailure = Object.assign(new Error('connect ECONNREFUSED'), {
+      code: 'XX000',
+      message:
+        'connect ECONNREFUSED: postgres://dusk:not-a-real-password@db.invalid:5432/app?sslmode=require ' +
+        'password=not-a-real-password user=dusk',
+    });
+    try {
+      const res = await handle(
+        { method: 'GET', path: '/api/health', body: undefined, ip: '1', headers: { host: 'reader.test' } },
+        () => Promise.reject(connectionFailure),
+      );
+      expect(res.status).toBe(503);
+    } finally {
+      spy.mockRestore();
+    }
+    const output = logged.join('\n');
+    // Diagnosable: the driver code and the server's own wording must survive.
+    expect(output).toContain('XX000');
+    expect(output).toContain('ECONNREFUSED');
+    // Not recoverable from the logs by anyone. The scheme is left as a marker;
+    // everything after it must be gone.
+    expect(output).not.toContain('not-a-real-password');
+    expect(output).not.toContain('db.invalid');
+    expect(output).not.toContain('user=dusk');
+    expect(output).toContain('postgres://[redacted]');
   });
 
   it('blocks state-changing requests without the client header or from another origin (CSRF)', async () => {
