@@ -106,6 +106,25 @@ function body(req: ApiRequest): Record<string, unknown> {
   throw new ApiError(400, 'bad_request', 'The request could not be read.');
 }
 
+/**
+ * Describe a connection failure well enough to act on, with nothing usable out
+ * of it. Connection strings, passwords and user names are redacted; the driver
+ * code (ENOTFOUND, ECONNREFUSED, 28P01, XX000 …) and the server's own wording are
+ * kept, because without them a dead database is undiagnosable.
+ */
+function describeDbError(error: unknown): string {
+  const name = (error as Error)?.name ?? 'Error';
+  const code = String((error as { code?: unknown }).code ?? '');
+  const message = String((error as Error)?.message ?? '');
+  const safe = message
+    .replace(/(postgres(?:ql)?:\/\/)[^\s'"]*/gi, '$1[redacted]')
+    .replace(/password=("[^"]*"|\S*)/gi, 'password=[redacted]')
+    .replace(/user(name)?=("[^"]*"|\S*)/gi, 'user=$1[redacted]')
+    .replace(/(for user\s+)(\S+)/gi, '$1[redacted]')
+    .slice(0, 300);
+  return `${name}${code ? ` (${code})` : ''}${safe ? `: ${safe}` : ''}`;
+}
+
 function chapterNumberOrThrow(slug: string): number {
   const n = publishedChapterNumber(slug);
   if (!n) throw new ApiError(404, 'no_chapter', 'That chapter is not part of the published edition.');
@@ -584,7 +603,11 @@ export async function handle(req: ApiRequest, getDb: () => Promise<Db> | undefin
     let db: Db;
     try {
       db = await dbPromise;
-    } catch {
+    } catch (error) {
+      // Without this line an unreachable database is completely silent and
+      // indistinguishable from a healthy deployment. describeDbError keeps the
+      // diagnostic value while stripping anything credential-bearing.
+      console.error(`[api] database unavailable: ${describeDbError(error)}`);
       throw new ApiError(503, 'db_unavailable', 'The reading room’s records are unavailable right now. Reading is unaffected.');
     }
     const [, pattern, handler] = match;

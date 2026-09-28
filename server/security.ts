@@ -60,7 +60,21 @@ export function countUrls(text: string): number {
   return (text.match(/https?:\/\/|www\./gi) ?? []).length;
 }
 
-let fallbackSecret: string | undefined;
+/**
+ * Key material for the IP rate-limit buckets.
+ *
+ * RATE_LIMIT_SECRET must be set. A per-process random fallback would look like
+ * it worked while silently resetting every bucket on each cold start, which
+ * turns the per-IP limits into no limit at all — and does so invisibly. Failing
+ * closed here is deliberate: only the two unauthenticated actions this secret
+ * protects (account creation and sign-in) are refused, and the reason is logged.
+ */
+function rateLimitSecret(): string {
+  const configured = process.env.RATE_LIMIT_SECRET;
+  if (configured) return configured;
+  console.error('[api] RATE_LIMIT_SECRET is not set — refusing to serve IP rate limits with unstable key material.');
+  throw new Error('RATE_LIMIT_SECRET is not configured');
+}
 
 /**
  * Pseudonymous rate-limit key for unauthenticated actions. The IP address is
@@ -68,9 +82,8 @@ let fallbackSecret: string | undefined;
  * stored bucket cannot be reversed or linked across days.
  */
 export function networkBucket(scope: string, ip: string): string {
-  const secret = process.env.RATE_LIMIT_SECRET ?? (fallbackSecret ??= randomBytes(32).toString('hex'));
   const day = new Date().toISOString().slice(0, 10);
-  return `${scope}:net:${createHmac('sha256', secret).update(`${day}|${ip}`).digest('base64url').slice(0, 22)}`;
+  return `${scope}:net:${createHmac('sha256', rateLimitSecret()).update(`${day}|${ip}`).digest('base64url').slice(0, 22)}`;
 }
 
 export type Limit = { max: number; windowSeconds: number };

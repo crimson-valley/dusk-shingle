@@ -76,7 +76,7 @@ export function LibraryPage() {
       </section>
 
       <TitleNote />
-      <PublicationFooter />
+      <PublicationFooter showTitleNote={false} />
     </main>
   );
 }

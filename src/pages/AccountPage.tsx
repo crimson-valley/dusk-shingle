@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useId, useState, type FormEvent } from 'react';
 import { Link } from '../components/Link';
 import { Icon } from '../components/Icon';
 import { Notice } from '../components/Notice';
@@ -163,6 +163,7 @@ type Notifications = { replies: { id: string; chapterSlug: string; author: strin
 function SignedIn() {
   const { account, sync, syncNow, signOut, deleteAccount, signIn, setUnreadReplies } = useReader();
   const [notes, setNotes] = useState<Notifications>();
+  const [notesError, setNotesError] = useState<string | null>(null);
   const [phrase, setPhrase] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string>();
@@ -171,14 +172,22 @@ function SignedIn() {
   const status = SYNC_TEXT[sync];
   const titleOf = (slug: string) => getPublishedChapters().find((c) => c.slug === slug)?.title ?? slug;
 
-  useEffect(() => {
-    api<Notifications>('GET', '/api/notifications').then((n) => {
-      setNotes(n);
-      if (n.replies.some((r) => r.unread)) {
-        void api('POST', '/api/notifications/seen').then(() => setUnreadReplies(0));
-      }
-    }).catch(() => undefined);
+  const loadNotes = useCallback(() => {
+    setNotes(undefined);
+    setNotesError(null);
+    api<Notifications>('GET', '/api/notifications')
+      .then((n) => {
+        setNotes(n);
+        if (n.replies.some((r) => r.unread)) {
+          void api('POST', '/api/notifications/seen').then(() => setUnreadReplies(0));
+        }
+      })
+      // Without this the section stays on "Loading…" for good after a failed
+      // fetch, with no way to tell it failed or to try again.
+      .catch((e: ApiFailure) => setNotesError(e.message));
   }, [setUnreadReplies]);
+
+  useEffect(loadNotes, [loadNotes]);
 
   return (
     <>
@@ -211,7 +220,11 @@ function SignedIn() {
 
       <section className="account-section" aria-labelledby={`${id}-n`}>
         <h2 id={`${id}-n`} className="meta-label">Replies to you</h2>
-        {!notes ? <p className="meta">Loading…</p> : notes.replies.length === 0 && notes.moderated.length === 0 ? (
+        {notesError ? (
+          <Notice tone="quiet" title="Replies could not be loaded" action={<button type="button" className="btn btn-quiet" onClick={loadNotes}>Try again</button>}>
+            {notesError}
+          </Notice>
+        ) : !notes ? <p className="meta loading">Loading…</p> : notes.replies.length === 0 && notes.moderated.length === 0 ? (
           <p className="meta">Nothing new. You are only notified of direct replies and moderation of your own comments.</p>
         ) : (
           <ul className="plain-list">
