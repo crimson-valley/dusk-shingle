@@ -21,8 +21,18 @@ export function ChapterBody({ blocks }: { blocks: ChapterBlock[] }) {
             </figure>
           );
         }
-        return <p key={index}>{renderInline(block.text)}</p>;
+        const machine = isMachineLine(block.text);
+        return <p key={index} data-machine={machine || undefined}>{renderInline(block.text)}</p>;
       })}
     </div>
   );
+}
+
+/**
+ * A paragraph that is nothing but an instrument reading — the pumping station's
+ * own alarm text — is the system's voice, not the narrator's. Marking it lets
+ * the page set it apart from the prose without touching a word of the novel.
+ */
+function isMachineLine(text: string): boolean {
+  return /^\*\*[^*]+\*\*$/.test(text.trim());
 }

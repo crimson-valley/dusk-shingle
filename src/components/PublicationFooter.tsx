@@ -12,7 +12,7 @@ export function PublicationFooter({ showTitleNote = true }: { showTitleNote?: bo
             it there made the reader read the same paragraph twice. */}
         {showTitleNote && (
           <p className="footer-title-note">
-            <em>{publication.title}</em> is the name of the project under which this novel
+            <cite>{publication.title}</cite> is the name of the project under which this novel
             belongs — the novel’s true name will be revealed in due time.
           </p>
         )}

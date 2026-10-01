@@ -13,7 +13,13 @@ html {
 }
 
 body { margin: 0; min-width: 20rem; min-height: 100vh; line-height: 1.5; }
-body, .app { background: var(--surface-page); transition: background-color var(--dur-2) var(--ease), color var(--dur-2) var(--ease); }
+/* Grain scrolls with the paper rather than being pinned to the viewport: one
+   tiled background image, no fixed-attachment repaint cost while reading. */
+body {
+  background-color: var(--surface-page);
+  background-image: var(--grain);
+  transition: background-color var(--dur-2) var(--ease), color var(--dur-2) var(--ease);
+}
 
 h1, h2, h3, p, ol, ul, dl, dd, figure, blockquote { margin: 0; }
 ol, ul { padding: 0; list-style: none; }
@@ -22,6 +28,9 @@ button, input, textarea, select { font: inherit; color: inherit; }
 button { cursor: pointer; background: none; border: 0; padding: 0; }
 button:disabled { cursor: not-allowed; }
 code { font-family: var(--font-mono); font-size: 0.88em; }
+/* No italic cut of the serif is loaded, so anything that would lean on one is
+   set roman: a synthesised oblique on a text serif reads as a fault. */
+cite { font-style: normal; }
 a { color: inherit; text-decoration-thickness: var(--hairline); text-underline-offset: 0.2em; }
 ::selection { background: var(--accent-quiet); color: var(--ink); }
 
@@ -39,7 +48,8 @@ a { color: inherit; text-decoration-thickness: var(--hairline); text-underline-o
 
 .skip-link {
   position: fixed; top: var(--space-2); left: var(--space-2); z-index: 100;
-  padding: var(--space-2) var(--space-4); background: var(--ink); color: var(--surface-page);
+  display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0 var(--space-4);
+  background: var(--ink); color: var(--surface-page);
   font-size: var(--text-ui); text-decoration: none; border-radius: var(--radius-1);
   transform: translateY(-200%);
 }
@@ -58,4 +68,24 @@ a { color: inherit; text-decoration-thickness: var(--hairline); text-underline-o
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; scroll-behavior: auto !important; }
+}
+
+/* A reader who asks for more contrast gets firmer hairlines and stronger ink
+   rather than a different layout: the design holds, only its weight changes. */
+@media (prefers-contrast: more) {
+  :root { --ink-2: #302e2a; --ink-3: #47443e; --rule: #b6b0a3; --rule-strong: #8d877a; }
+  :root[data-theme='dusk'] { --ink-2: #d2ccc1; --ink-3: #b3ada3; --rule: #45484d; --rule-strong: #6a6e74; }
+  a { text-decoration-thickness: max(var(--hairline), 1.5px); }
+  :focus-visible { outline-width: 3px; }
+}
+
+/* Printing a chapter is a real thing readers do with a novel. */
+@media print {
+  .masthead, .footer, .chapter-nav, .controls, .progress, .chapter-discussion,
+  .private-note, .resume, .chapter-end-actions { display: none !important; }
+  body { background: none; }
+  .prelude { min-height: 0; background: none; color: var(--ink); padding-block: 0 1.5rem; }
+  .prelude-horizon, .prelude-watermark { display: none; }
+  .prose { width: auto; max-width: none; }
+  .prose p { orphans: 2; widows: 2; }
 }

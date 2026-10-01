@@ -3,12 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#eee9e0" />
+    <meta name="theme-color" content="#f4f1ea" />
     <meta
       name="description"
       content="The reader's library for Dusk Shingle."
     />
     <title>Dusk Shingle — Reader's library</title>
+    <!--
+      The fonts are declared here rather than imported from main.tsx so the
+      browser discovers them from the HTML, in parallel with the script, rather
+      than after the bundle has parsed and run. That is the whole of the
+      difference between the reading column reflowing once on first visit and
+      reflowing not at all.
+    -->
+    <link rel="stylesheet" href="/src/styles/fonts.css" />
   </head>
   <body>
     <div id="root"></div>
