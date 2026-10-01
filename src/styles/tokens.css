@@ -20,11 +20,19 @@
   --text-display: clamp(2.5rem, 1.6rem + 3.6vw, 4.25rem);   /* page & chapter titles */
   --text-hero: clamp(3rem, 1.4rem + 6.4vw, 6.5rem);         /* novel identity only */
 
-  /* Prose (driven by reader preferences) */
+  /* ── Prose (driven by reader preferences) ──
+     The paragraph gap is locked to exactly one line of leading. That is the
+     whole point: every paragraph then begins on an even line of the same
+     baseline grid, so the eye returns to the same height after every
+     paragraph instead of landing at a slightly different one. In a chapter
+     like this one — where three quarters of the paragraphs are a single line
+     of clipped speech or narration — an arbitrary gap makes the page read as
+     a list; a gap equal to the leading makes it read as prose. It also scales
+     itself whenever the reader changes size or leading. */
   --prose-size: 1.1875rem;   /* 19 */
-  --prose-leading: 1.64;
-  --prose-measure: 34em;     /* ≈ 66 characters */
-  --prose-gap: 0.95em;
+  --prose-leading: 1.58;     /* ≈ 63 characters per line at the standard measure */
+  --prose-measure: 33em;
+  --prose-gap: calc(var(--prose-leading) * 1em);
 
   /* Tracking */
   --track-display: -0.022em;
@@ -47,6 +55,9 @@
   --text-max: 42rem;
   --gutter: clamp(1.25rem, 5vw, 3rem);
   --masthead-h: 3.5rem;
+  /* The wide-screen margin rail. Narrow enough that it always fits the space
+     beside the reading column, even at the widest measure and largest size. */
+  --rail-w: 7.5rem;
 
   /* Shape — surfaces are square; only controls are softened */
   --radius-0: 0;
@@ -81,6 +92,13 @@
   --danger-quiet: #f3dfd9;
   --redaction: #2b2a27;
   --shadow-pop: 0 1px 0 rgb(0 0 0 / 0.02), 0 10px 28px -12px rgb(28 27 25 / 0.28);
+
+  /* Paper grain. One greyscale noise tile, alpha already baked into the SVG, so
+     it costs a single background image and no blend layer, extra element or
+     script. `data:` is allowed by the CSP img-src, and the tile is rasterised
+     once and reused as a background. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.86' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.055'/%3E%3C/svg%3E");
+  --grain-alpha: 1;
   color-scheme: light;
 }
 
@@ -105,21 +123,23 @@
   --danger-quiet: #2d1b18;
   --redaction: #d8d3c9;
   --shadow-pop: 0 0 0 1px rgb(255 255 255 / 0.04), 0 12px 32px -12px rgb(0 0 0 / 0.7);
+  /* The ground is already near-black, so grain reads as lift rather than dirt. */
+  --grain-alpha: 0.55;
   color-scheme: dark;
 }
 
 /* Reader preferences */
-:root[data-size='small'] { --prose-size: 1.0625rem; }
-:root[data-size='large'] { --prose-size: 1.3125rem; }
-:root[data-size='larger'] { --prose-size: 1.5rem; --prose-leading: 1.6; }
-:root[data-measure='narrow'] { --prose-measure: 29em; }
-:root[data-measure='wide'] { --prose-measure: 39em; }
+:root[data-size='small'] { --prose-size: 1.0625rem; --prose-leading: 1.62; }
+:root[data-size='large'] { --prose-size: 1.3125rem; --prose-leading: 1.56; }
+:root[data-size='larger'] { --prose-size: 1.4375rem; --prose-leading: 1.54; }
+:root[data-measure='narrow'] { --prose-measure: 29.5em; }
+:root[data-measure='wide'] { --prose-measure: 37em; }
 
 @media (max-width: 30rem) {
-  :root { --prose-size: 1.125rem; --prose-leading: 1.6; }
-  :root[data-size='small'] { --prose-size: 1rem; }
-  :root[data-size='large'] { --prose-size: 1.25rem; }
-  :root[data-size='larger'] { --prose-size: 1.375rem; }
+  :root { --prose-size: 1.125rem; --prose-leading: 1.58; }
+  :root[data-size='small'] { --prose-size: 1rem; --prose-leading: 1.62; }
+  :root[data-size='large'] { --prose-size: 1.25rem; --prose-leading: 1.56; }
+  :root[data-size='larger'] { --prose-size: 1.375rem; --prose-leading: 1.54; }
 }
 
 @media (prefers-reduced-motion: reduce) {

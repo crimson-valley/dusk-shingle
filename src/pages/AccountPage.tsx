@@ -225,7 +225,7 @@ function SignedIn() {
             {notesError}
           </Notice>
         ) : !notes ? <p className="meta loading">Loading…</p> : notes.replies.length === 0 && notes.moderated.length === 0 ? (
-          <p className="meta">Nothing new. You are only notified of direct replies and moderation of your own comments.</p>
+          <p>Nothing new. You are only notified of direct replies and moderation of your own comments.</p>
         ) : (
           <ul className="plain-list">
             {notes.moderated.map((m) => (
