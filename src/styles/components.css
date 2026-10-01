@@ -1,25 +1,36 @@
 /* ═══ Masthead ═══════════════════════════════════════════════════════════ */
+/* The masthead and footer sit on their own opaque paper, so each has to carry
+   the grain itself — otherwise the texture stops dead at the page edges. */
 .masthead {
   position: sticky; top: 0; z-index: 30;
-  background: var(--surface-page);
+  background-color: var(--surface-page);
+  background-image: var(--grain);
   border-bottom: var(--hairline) solid var(--rule);
   transition: transform var(--dur-3) var(--ease), background-color var(--dur-2) var(--ease);
 }
 .masthead[data-hidden] { transform: translateY(-100%); }
+/* Under reduced motion the header does not step aside at all: a heading that
+   vanishes and reappears mid-sentence is exactly the movement a reader asked
+   us not to inflict on them. */
+@media (prefers-reduced-motion: reduce) { .masthead[data-hidden] { transform: none; } }
 .masthead-inner {
   display: flex; align-items: center; gap: var(--space-5);
   width: min(100% - 2 * var(--gutter), var(--page-max)); height: var(--masthead-h); margin-inline: auto;
 }
 .wordmark {
   display: inline-flex; align-items: center; gap: 0.55em; flex: none;
+  min-height: 2.75rem;
   font-family: var(--font-serif); font-size: 1.125rem; font-variation-settings: 'opsz' 24; letter-spacing: var(--track-tight);
   text-decoration: none; color: var(--ink);
 }
 .wordmark-horizon { display: block; width: 1.1em; height: var(--hairline); background: currentColor; opacity: 0.55; }
 .wordmark-small { font-size: 1rem; }
+/* The running head: the chapter you are in, in the voice of the machinery
+   rather than the prose, so it can never be mistaken for part of the text. */
 .masthead-context {
   flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font-family: var(--font-serif); font-style: italic; color: var(--ink-3); font-size: var(--text-ui);
+  font-family: var(--font-mono); font-size: var(--text-micro); font-weight: 500;
+  letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3);
 }
 .nav { display: flex; gap: var(--space-1); margin-left: auto; }
 .masthead[data-reading] .nav { margin-left: 0; }
@@ -52,7 +63,6 @@
 }
 @media (max-width: 30rem) {
   .masthead[data-reading] .wordmark-horizon, .masthead[data-reading] .wordmark span:last-child { display: none; }
-  .masthead[data-reading] .icon-btn { width: 2.5rem; }
 }
 
 /* ═══ Buttons ════════════════════════════════════════════════════════════ */
@@ -83,6 +93,8 @@
 .text-btn:hover { color: var(--ink); }
 .text-btn[aria-pressed='true'] { color: var(--accent); }
 .text-btn.danger { color: var(--danger); }
+.text-btn:disabled { color: var(--ink-3); opacity: 0.45; cursor: not-allowed; }
+.text-btn:disabled:hover { color: var(--ink-3); }
 .text-btn .count { font-family: var(--font-mono); }
 
 /* ═══ Forms ══════════════════════════════════════════════════════════════ */
@@ -158,35 +170,62 @@ legend { margin-bottom: var(--space-2); padding: 0; }
 .progress { position: fixed; inset: 0 0 auto; z-index: 40; height: 2px; pointer-events: none; }
 .progress-value { height: 100%; background: var(--accent); transform-origin: left; }
 
+/* ── The threshold ──
+   Not a banner. The band exists to mark the moment before reading, so it is
+   short, it is textured rather than flat, and the chapter number sits in it as
+   a watermark large enough to be felt and faint enough to be ignored. The
+   reader arrives at the page rather than being shown a hero. */
 .prelude {
-  position: relative; display: grid; align-items: end;
-  min-height: clamp(22rem, 64vh, 40rem);
-  background: var(--surface-threshold); color: var(--on-threshold);
+  position: relative; display: grid; align-items: end; overflow: hidden;
+  min-height: clamp(15rem, 42vh, 26rem);
+  background-color: var(--surface-threshold);
+  background-image: var(--grain);
+  color: var(--on-threshold);
 }
 .prelude-inner {
   /* Same measure as the prose column so title and text share one left edge. */
   font-size: var(--prose-size);
-  width: min(100% - 2 * var(--gutter), var(--prose-measure)); margin-inline: auto; padding-block: var(--space-8) var(--space-8);
+  width: min(100% - 2 * var(--gutter), var(--prose-measure)); margin-inline: auto;
+  padding-block: var(--space-7) var(--space-7);
+  position: relative; z-index: 1;
 }
 .prelude-number { font-family: var(--font-mono); font-size: var(--text-micro); letter-spacing: 0.16em; text-transform: uppercase; color: var(--on-threshold-muted); }
 .prelude-title {
   margin-block: var(--space-4) var(--space-5);
-  font-family: var(--font-serif); font-weight: 350; font-size: var(--text-display); line-height: 1.02;
+  font-family: var(--font-serif); font-weight: 350; font-size: var(--text-display); line-height: 1.04;
   letter-spacing: var(--track-display); font-variation-settings: 'opsz' 72; text-wrap: balance;
 }
 .prelude-meta { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); font-family: var(--font-mono); font-size: var(--text-meta); color: var(--on-threshold-muted); }
+/* The watermark: the chapter number as pure scale, cropped by the band. */
+.prelude-watermark {
+  position: absolute; z-index: 0; right: -0.06em; bottom: -0.34em; pointer-events: none; user-select: none;
+  font-family: var(--font-serif); font-weight: 350; font-size: clamp(11rem, 26vw, 22rem); line-height: 0.72;
+  font-variation-settings: 'opsz' 72; letter-spacing: -0.04em;
+  color: var(--on-threshold); opacity: 0.055;
+}
 /* The horizon: one hairline where the dusk band meets the page. */
-.prelude-horizon { position: absolute; left: 0; right: 0; bottom: 0; height: var(--hairline); background: var(--on-threshold-muted); opacity: 0.35; }
+.prelude-horizon { position: absolute; left: 0; right: 0; bottom: 0; height: var(--hairline); background: var(--on-threshold-muted); opacity: 0.45; z-index: 1; }
 
+/* `--prose-measure` is in `em`, so every block that uses it has to resolve
+   that `em` against the prose size — not against the 16px root. Each of these
+   declares the size for exactly that reason, which is what keeps the chapter
+   title, the prose, the end matter and the chapter navigation on one left
+   edge instead of four. */
 .resume {
   display: flex; justify-content: space-between; align-items: center; gap: var(--space-2);
+  font-size: var(--prose-size);
   width: min(100% - 2 * var(--gutter), var(--prose-measure)); margin: var(--space-5) auto 0;
   padding-bottom: var(--space-2); border-bottom: var(--hairline) solid var(--rule);
-  font-size: calc(var(--prose-size) * 0.9);
 }
 .resume .btn-quiet { padding-left: 0; }
 
-.prose-wrap { padding-block: var(--space-8) var(--space-7); }
+/* ── The reading surface ── */
+.prose-wrap {
+  /* Declared here so the `em` in --prose-measure resolves against the prose
+     size, exactly as it does for the prelude title above. */
+  font-size: var(--prose-size);
+  padding-block: var(--space-8) var(--space-7);
+}
 .prose {
   width: min(100% - 2 * var(--gutter), var(--prose-measure)); margin-inline: auto;
   font-family: var(--font-serif); font-size: var(--prose-size); line-height: var(--prose-leading);
@@ -196,26 +235,65 @@ legend { margin-bottom: var(--space-2); padding: 0; }
   hyphens: manual; overflow-wrap: break-word;
 }
 .prose p { margin: 0 0 var(--prose-gap); }
-.prose strong { font-family: var(--font-mono); font-weight: 500; font-size: 0.82em; letter-spacing: 0.02em; }
-.section-break { border: 0; height: var(--hairline); width: 3rem; margin: 2.4em auto; background: var(--rule-strong); }
-.epigraph { margin: 0 0 2.5em; padding-left: 1.25em; border-left: var(--hairline) solid var(--rule-strong); font-style: italic; color: var(--ink-2); }
-.epigraph figcaption { margin-top: 0.5em; font-family: var(--font-mono); font-style: normal; font-size: var(--text-meta); color: var(--ink-3); }
+/* The machine's voice. In this novel the system speaks in mono and the people
+   speak in serif, and a line that is nothing but an instrument reading gets
+   the full block treatment so it lands on the baseline instead of straddling
+   it. Inline emphasis inside a paragraph stays inline. */
+.prose strong { font-family: var(--font-mono); font-weight: 500; font-size: 0.86em; letter-spacing: 0.01em; color: var(--ink); }
+.prose p[data-machine] {
+  margin-block: calc(var(--prose-gap) * 0.55) var(--prose-gap);
+  padding-left: 1.1em; border-left: 2px solid var(--rule-strong);
+  font-family: var(--font-mono); font-size: 0.8em; line-height: 1.6; letter-spacing: 0.03em;
+  color: var(--ink-2); text-transform: uppercase;
+}
+.prose p[data-machine] strong { font-size: 1em; font-weight: 500; color: inherit; }
+.section-break {
+  border: 0; height: var(--hairline); width: 3rem;
+  /* Kept on the grid: a break occupies exactly one line, so the paragraphs
+     after it resume on the same baseline cadence as the ones before. */
+  margin: var(--prose-gap) auto;
+  background: var(--rule-strong);
+}
+.epigraph {
+  margin: 0 0 var(--prose-gap); padding-left: 1.25em;
+  border-left: var(--hairline) solid var(--rule-strong); color: var(--ink-2);
+}
+.epigraph blockquote { font-style: italic; }
+.epigraph figcaption { margin-top: 0.5em; font-family: var(--font-mono); font-size: var(--text-meta); color: var(--ink-3); }
 
 .chapter-end {
-  width: min(100% - 2 * var(--gutter), var(--prose-measure)); margin: 0 auto; padding-block: var(--space-6) var(--space-8);
-  text-align: center;
+  font-size: var(--prose-size);
+  width: min(100% - 2 * var(--gutter), var(--prose-measure)); margin: 0 auto; padding-block: var(--space-7) var(--space-8);
 }
-.end-mark { width: 3rem; height: var(--hairline); margin: 0 auto var(--space-6); background: var(--ink); }
-.chapter-end-status { margin-top: var(--space-2); font-family: var(--font-serif); font-style: italic; color: var(--ink-3); }
+.chapter-coda { text-align: center; }
+.end-mark {
+  width: 3rem; height: var(--hairline); margin: 0 auto var(--space-6); background: var(--ink-3);
+  transition: width var(--dur-3) var(--ease), background-color var(--dur-3) var(--ease);
+}
+/* Completion is stated once, plainly, and the mark widens to hold it. */
+.chapter-end[data-complete='true'] .end-mark { width: 6rem; background: var(--accent); }
+.chapter-end-status {
+  margin-top: var(--space-3); font-family: var(--font-mono); font-size: var(--text-micro);
+  font-weight: 500; letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3);
+}
+.chapter-end[data-complete='true'] .chapter-end-status { color: var(--accent); }
 .chapter-end-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin-top: var(--space-6); }
 .note-open { margin-top: var(--space-6); }
+.chapter-discussion { margin-top: var(--space-8); padding-top: var(--space-6); border-top: var(--hairline) solid var(--rule); text-align: left; }
+.chapter-discussion-text { max-width: 36em; margin-top: var(--space-3); font-family: var(--font-serif); font-size: var(--text-body); line-height: 1.6; color: var(--ink-2); }
+.chapter-discussion .row-actions { justify-content: flex-start; }
 .private-note { margin-top: var(--space-7); text-align: left; }
 .private-note-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .private-note textarea { margin-block: var(--space-2); }
 
+/* ── Chapter navigation ──
+   The same measure as the prose: the page keeps one left edge from the
+   chapter title all the way down to the next chapter. */
 .chapter-nav {
   display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--space-4);
-  width: min(100% - 2 * var(--gutter), var(--text-max)); margin: 0 auto var(--space-8); padding-top: var(--space-5);
+  font-size: var(--prose-size);
+  width: min(100% - 2 * var(--gutter), var(--prose-measure)); margin: 0 auto var(--space-8);
+  padding-top: var(--space-5);
   border-top: var(--hairline) solid var(--rule);
 }
 .chapter-nav a { display: grid; gap: var(--space-1); text-decoration: none; min-height: 2.75rem; }
@@ -229,37 +307,109 @@ legend { margin-bottom: var(--space-2); padding: 0; }
   .chapter-nav-contents { grid-column: 1 / -1; grid-row: 2; }
 }
 
+/* ── The margin rail ──
+   Only where there is genuinely room beside the reading column. On a wide
+   display the reader otherwise faces a column of text marooned in the middle
+   of an empty field; the rail puts the front matter and a permanent, quiet
+   progress readout in that space instead of leaving it void. `minmax(0, 1fr)`
+   keeps the side columns shrinkable, so the rail can never widen the page. */
+.chapter-rail {
+  display: none;
+  gap: var(--space-4); align-content: start;
+  position: sticky; top: calc(var(--masthead-h) + var(--space-6));
+  padding-top: var(--space-2); min-width: 0;
+  font-family: var(--font-mono); font-size: var(--text-micro); letter-spacing: var(--track-label);
+  text-transform: uppercase; color: var(--ink-3);
+}
+.rail-numeral { font-family: var(--font-serif); font-size: 2.75rem; line-height: 1; font-weight: 350; letter-spacing: -0.02em; text-transform: none; color: var(--ink-3); font-variation-settings: 'opsz' 40; }
+.rail-title { color: var(--ink-2); text-transform: none; letter-spacing: 0; font-size: var(--text-micro); line-height: 1.5; }
+/* Progress as a standing column: the reader can see how far in they are
+   without looking away from the column. */
+.rail-progress { position: relative; width: var(--hairline); height: clamp(6rem, 18vh, 11rem); background: var(--rule); }
+.rail-progress-fill { position: absolute; inset: 0; background: var(--accent); transform-origin: top; transform: scaleY(0); }
+.rail-percent { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+@media (min-width: 64rem) {
+  .prose-wrap {
+    display: grid;
+    /* Symmetric side columns, so the reading column stays optically centred on
+       the page. Each side reserves the rail plus a gap; the rail itself is
+       right-aligned inside its side, which puts its outer edge on the page
+       gutter. `.prose` then drops its own gutter subtraction — the grid cell
+       already provides that inset — so its left edge still lands exactly on
+       the chapter title's, at every width where the rail appears. */
+    grid-template-columns: minmax(0, calc(var(--rail-w) + var(--space-7))) minmax(0, 1fr) minmax(0, calc(var(--rail-w) + var(--space-7)));
+    align-items: start;
+  }
+  .chapter-rail { display: grid; grid-column: 1; grid-row: 1; justify-self: end; width: var(--rail-w); }
+  .prose { grid-column: 2; width: min(100%, var(--prose-measure)); }
+}
+
+
 /* ═══ Reading controls ══════════════════════════════════════════════════ */
 .controls { position: relative; }
 .controls-panel {
   position: absolute; right: 0; top: calc(100% + var(--space-2)); z-index: 50;
   width: min(20rem, calc(100vw - 2 * var(--gutter))); padding: var(--space-4);
-  background: var(--surface-raised); border: var(--hairline) solid var(--rule); border-radius: var(--radius-2);
+  background-color: var(--surface-raised);
+  background-image: var(--grain);
+  border: var(--hairline) solid var(--rule); border-radius: var(--radius-2);
   box-shadow: var(--shadow-pop);
   animation: rise var(--dur-2) var(--ease);
 }
 @keyframes rise { from { opacity: 0; transform: translateY(-4px); } }
 .control-row { display: grid; gap: var(--space-2); padding-block: var(--space-3); border-bottom: var(--hairline) solid var(--rule); }
 .control-row:first-child { padding-top: 0; }
-.control-label { font-family: var(--font-mono); font-size: var(--text-micro); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.control-label { font-family: var(--font-mono); font-size: var(--text-micro); font-weight: 500; letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
 .segmented { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 2px; border: var(--hairline) solid var(--rule); border-radius: var(--radius-pill); }
 .segmented button { min-height: 2.25rem; font-size: var(--text-meta); color: var(--ink-2); border-radius: var(--radius-pill); transition: background-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease); }
+.segmented button:hover { color: var(--ink); }
 .segmented button[aria-checked='true'] { background: var(--ink); color: var(--surface-page); }
+/* Text size shows its effect in the control: each option is set at the size it
+   selects, so the reader chooses by looking rather than by remembering. */
+.segmented-sizes button { font-family: var(--font-serif); color: var(--ink-2); }
+.segmented-sizes button:nth-child(1) { font-size: 0.8125rem; }
+.segmented-sizes button:nth-child(2) { font-size: 1rem; }
+.segmented-sizes button:nth-child(3) { font-size: 1.1875rem; }
+.segmented-sizes button:nth-child(4) { font-size: 1.375rem; }
 .stepper { display: grid; grid-template-columns: 2.75rem 1fr 2.75rem; align-items: center; border: var(--hairline) solid var(--rule); border-radius: var(--radius-1); }
 .stepper button { height: 2.5rem; font-family: var(--font-serif); font-size: 1.05rem; color: var(--ink); }
 .stepper button:disabled { color: var(--ink-3); opacity: 0.5; }
 .stepper output { text-align: center; font-family: var(--font-mono); font-size: var(--text-meta); color: var(--ink-2); text-transform: capitalize; }
-.controls-foot { padding-top: var(--space-3); font-size: var(--text-micro); color: var(--ink-3); }
+.controls-foot { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); padding-top: var(--space-3); font-size: var(--text-micro); color: var(--ink-3); }
+.controls-reset { color: var(--ink-3); text-decoration: underline; text-underline-offset: 0.2em; }
+.controls-reset:hover { color: var(--ink); }
 
-/* ═══ Standalone pages (account, errors, discussions index) ═══════════ */
-.standalone, .account, .discussions, .moderation, .discussion { padding-block: var(--space-8) var(--space-9); }
-.standalone, .account, .moderation, .discussion { max-width: var(--text-max); }
+/* On a phone the panel drops to the bottom of the screen, inside thumb reach,
+   and keeps its own scroll if a preference list ever outgrows it. The segmented
+   controls lose their pill radius here: at this size a 999px radius stops
+   reading as a segmented control and starts reading as a stock mobile UI, which
+   is the one thing this design system is not. */
+@media (max-width: 40rem) {
+  .controls-panel {
+    position: fixed; left: var(--space-3); right: var(--space-3); bottom: var(--space-3); top: auto;
+    width: auto; max-height: calc(100dvh - 2 * var(--space-3)); overflow-y: auto;
+    padding: var(--space-4) var(--space-4) var(--space-5);
+    box-shadow: 0 -1px 0 rgb(0 0 0 / 0.03), 0 -18px 40px -16px rgb(28 27 25 / 0.4);
+    animation: sheet var(--dur-2) var(--ease);
+  }
+  @keyframes sheet { from { opacity: 0; transform: translateY(8px); } }
+  .segmented, .segmented button { border-radius: var(--radius-1); }
+}
+
+/* ═══ Standalone pages (account, errors, community, thread) ═════════════ */
+.standalone, .account, .moderation, .community, .thread { padding-block: var(--space-8) var(--space-9); }
+.standalone, .account, .moderation, .thread { max-width: var(--text-max); }
+.community { max-width: 62rem; }
 .standalone-title {
   margin-block: var(--space-4) var(--space-4);
   font-family: var(--font-serif); font-weight: 400; font-size: clamp(2rem, 1.5rem + 2.2vw, 3rem); line-height: 1.08;
   letter-spacing: var(--track-display); font-variation-settings: 'opsz' 60; text-wrap: balance;
 }
-.standalone-title.handle { font-style: italic; }
+.standalone-title.handle {
+  font-family: var(--font-mono); font-weight: 500; font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.125rem);
+  letter-spacing: 0; font-variation-settings: normal; overflow-wrap: anywhere;
+}
 .standalone-text { max-width: 34em; margin-bottom: var(--space-6); font-size: var(--text-body); line-height: 1.6; color: var(--ink-2); }
 .standalone .btn { margin-top: var(--space-2); }
 .loading { padding-block: var(--space-6); }
@@ -281,7 +431,11 @@ legend { margin-bottom: var(--space-2); padding: 0; }
 .key-form input { flex: 1 1 14rem; }
 .key-reveal { display: grid; gap: var(--space-4); }
 .key-reveal .btn-primary { justify-self: start; }
-.key-box { padding: var(--space-5); background: var(--surface-threshold); color: var(--on-threshold); border-radius: var(--radius-1); }
+.key-box {
+  padding: var(--space-5);
+  background-color: var(--surface-threshold); background-image: var(--grain);
+  color: var(--on-threshold); border-radius: var(--radius-1);
+}
 .key-box code { display: block; font-size: clamp(0.8rem, 0.7rem + 0.6vw, 1.05rem); letter-spacing: 0.03em; overflow-wrap: anywhere; user-select: all; }
 .key-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
 .key-box .btn-secondary { color: var(--on-threshold); border-color: color-mix(in srgb, var(--on-threshold) 35%, transparent); }
@@ -294,15 +448,113 @@ legend { margin-bottom: var(--space-2); padding: 0; }
 .danger-zone .meta-label { color: var(--danger); }
 .plain-list li { padding-block: var(--space-2); border-bottom: var(--hairline) solid var(--rule); font-size: var(--text-ui); }
 .plain-list li[data-unread] a { font-weight: 600; }
+/* What this site does with your data, as a set of ruled statements rather than
+   a specification table: the label sits above its answer and a hairline keeps
+   them apart, so it reads as prose on the same terms as everything else. */
 .principles { margin-top: var(--space-8); padding-top: var(--space-6); border-top: var(--hairline) solid var(--ink); }
-.principles dl { display: grid; grid-template-columns: 12rem 1fr; gap: var(--space-4) var(--space-5); margin-top: var(--space-5); font-size: var(--text-ui); }
-.principles dt { font-weight: 600; }
-.principles dd { color: var(--ink-2); }
-@media (max-width: 40rem) { .principles dl { grid-template-columns: 1fr; gap: var(--space-1); } .principles dd { margin-bottom: var(--space-3); } }
+.principles dl { margin-top: var(--space-5); }
+.principles dt {
+  font-family: var(--font-mono); font-size: var(--text-micro); font-weight: 500;
+  letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3);
+}
+.principles dd { margin: var(--space-1) 0 0; padding-bottom: var(--space-4); border-bottom: var(--hairline) solid var(--rule); color: var(--ink-2); font-family: var(--font-serif); font-size: var(--text-body); line-height: 1.6; max-width: 42em; }
+.principles dd:last-child { border-bottom: 0; }
 
-/* ═══ Discussion ═════════════════════════════════════════════════════════ */
+/* ═══ Community ══════════════════════════════════════════════════════════ */
+.community-head { padding-bottom: var(--space-7); }
+.community-head .standalone-text { max-width: 38em; }
+.community-section { margin-top: var(--space-9); }
+.community-section > .meta-label { padding-bottom: var(--space-3); border-bottom: var(--hairline) solid var(--ink); }
+.empty-line { padding-block: var(--space-5); font-family: var(--font-mono); font-size: var(--text-meta); color: var(--ink-3); }
+
+/* Search is a means, not the subject: it sits at the width of a line of the
+   page rather than spanning it, so it cannot be mistaken for the main event. */
+.search { display: flex; gap: var(--space-2); margin-top: var(--space-6); max-width: 34rem; }
+.search input { flex: 1 1 12rem; }
+.search .btn { flex: none; }
+@media (max-width: 30rem) { .search { flex-direction: column; align-items: stretch; } }
+
+.category-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  border-top: var(--hairline) solid var(--rule); margin-top: var(--space-4);
+}
+.category-grid li { border-bottom: var(--hairline) solid var(--rule); }
+.category-card {
+  display: grid; gap: var(--space-2); align-content: start; height: 100%;
+  padding: var(--space-5) var(--space-5) var(--space-5) 0; text-decoration: none;
+  transition: background-color var(--dur-1) var(--ease);
+}
+.category-name { font-family: var(--font-serif); font-size: var(--text-h3); color: var(--ink); letter-spacing: var(--track-tight); }
+.category-text { font-size: var(--text-ui); line-height: 1.55; color: var(--ink-3); }
+.category-count { font-family: var(--font-mono); font-size: var(--text-meta); color: var(--ink-3); }
+.category-card:hover .category-name { text-decoration: underline; text-decoration-thickness: var(--hairline); text-underline-offset: 0.2em; }
+
+.thread-list { margin-top: var(--space-4); }
+.thread-row { padding-block: var(--space-5); border-bottom: var(--hairline) solid var(--rule); }
+.thread-where { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-4); margin-bottom: var(--space-2); }
+.thread-category { font-family: var(--font-mono); font-size: var(--text-micro); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--accent); }
+.thread-meta { font-family: var(--font-mono); font-size: var(--text-meta); color: var(--ink-3); }
+.thread-title { margin: 0; font-family: var(--font-serif); font-weight: 400; font-size: 1.375rem; line-height: 1.28; letter-spacing: var(--track-tight); font-variation-settings: 'opsz' 36; }
+.thread-title a { color: var(--ink); text-decoration: none; }
+.thread-title a:hover { text-decoration: underline; text-decoration-thickness: var(--hairline); text-underline-offset: 0.2em; }
+/* A title held back reads as withheld data, not as a book title — the same
+   instinct as the redaction bar over a spoiler. */
+.thread-title.is-concealed { font-family: var(--font-mono); font-size: var(--text-meta); color: var(--ink-3); }
+.thread-reveal { margin-left: var(--space-3); font-family: var(--font-mono); font-size: var(--text-meta); color: var(--ink-3); }
+.thread-reveal:hover { color: var(--ink); }
+
+.thread-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.tag {
+  display: inline-flex; align-items: center; gap: 0.35em; min-height: 1.75rem; padding: 0 var(--space-3);
+  font-family: var(--font-mono); font-size: var(--text-micro); letter-spacing: 0.02em;
+  color: var(--ink-3); text-decoration: none; border: var(--hairline) solid var(--rule); border-radius: var(--radius-1);
+  transition: color var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease);
+}
+.tag:hover { color: var(--ink); border-color: var(--ink-3); }
+.tag .count { font-size: var(--text-micro); opacity: 0.7; }
+button.tag.is-button { background: none; cursor: pointer; text-transform: none; font-size: var(--text-meta); }
+button.tag.is-button:hover { background: var(--surface-sunk); }
+
+.chapter-list { margin-top: var(--space-4); }
+.chapter-list > li { border-bottom: var(--hairline) solid var(--rule); }
+.chapter-row {
+  display: grid; grid-template-columns: 7rem 1fr auto; align-items: baseline; gap: var(--space-4);
+  padding: var(--space-4) 0; min-height: 2.75rem; text-decoration: none;
+}
+.chapter-num { font-family: var(--font-mono); font-size: var(--text-meta); color: var(--ink-3); }
+.chapter-title { font-family: var(--font-serif); font-size: var(--text-body); color: var(--ink); }
+.chapter-row:hover .chapter-title { text-decoration: underline; text-decoration-thickness: var(--hairline); text-underline-offset: 0.2em; }
+.chapter-meta { font-family: var(--font-mono); font-size: var(--text-meta); color: var(--ink-3); white-space: nowrap; }
+@media (max-width: 40rem) {
+  .chapter-row { grid-template-columns: 1fr; row-gap: var(--space-1); }
+  .chapter-meta { white-space: normal; }
+  .thread-title { font-size: 1.25rem; }
+}
+
+.load-more { display: flex; justify-content: center; padding-block: var(--space-6); }
+.back-to-top { padding-block: var(--space-4) var(--space-8); }
+
+.composer-new { border-bottom: 0; gap: var(--space-6); }
+.field { display: grid; gap: var(--space-2); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); }
+@media (max-width: 40rem) { .field-row { grid-template-columns: 1fr; } }
+.composer-new select { width: 100%; }
+.composer-new .btn-quiet { margin-right: auto; }
+.field-hint { max-width: 44em; font-size: var(--text-meta); line-height: 1.5; color: var(--ink-3); }
+
+/* ═══ Discussion and its replies ════════════════════════════════════════ */
 .discussion-head { padding-bottom: var(--space-6); border-bottom: var(--hairline) solid var(--ink); }
 .discussion-title { margin-block: var(--space-3); font-family: var(--font-serif); font-weight: 400; font-size: clamp(2rem, 1.5rem + 2vw, 2.75rem); line-height: 1.1; letter-spacing: var(--track-display); font-variation-settings: 'opsz' 60; }
+/* Which chapter a discussion belongs to is front matter, set as a running
+   head rather than a second title competing with the discussion's own. It is
+   bound to the label above it and held clear of the body text below, so it
+   cannot read as a third heading. */
+.discussion-of {
+  margin-block: var(--space-1) var(--space-5);
+  font-family: var(--font-mono); font-size: var(--text-micro); font-weight: 500;
+  letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3);
+}
+.discussion-title.is-loading { background: var(--surface-sunk); color: transparent; border-radius: var(--radius-1); user-select: none; }
 .discussion-scope { max-width: 36em; font-size: var(--text-ui); line-height: 1.6; color: var(--ink-2); }
 .gate { margin-top: var(--space-6); padding: var(--space-6); background: var(--surface-sunk); }
 .gate-title { font-family: var(--font-serif); font-size: var(--text-h3); margin-bottom: var(--space-2); }
@@ -319,19 +571,28 @@ legend { margin-bottom: var(--space-2); padding: 0; }
 .threads > .thread { border-bottom: var(--hairline) solid var(--rule); }
 .comment { padding-block: var(--space-5); }
 .comment-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); margin-bottom: var(--space-2); }
-.comment-author { font-family: var(--font-serif); font-style: italic; font-size: var(--text-body); }
+/* A pseudonym is a generated token, not a byline, so it speaks in mono — which
+   also keeps it from being confused with the prose of the post itself. */
+.comment-author { font-family: var(--font-mono); font-size: var(--text-meta); font-weight: 500; letter-spacing: 0.01em; color: var(--ink-2); }
 .comment-you { font-style: normal; font-family: var(--font-mono); font-size: var(--text-meta); color: var(--accent); }
-.comment-text { font-family: var(--font-serif); font-size: 1.125rem; line-height: 1.58; font-variation-settings: 'opsz' 16; overflow-wrap: anywhere; white-space: pre-line; }
+/* A post is prose someone took the time to write, so it gets the same measure
+   discipline as the novel rather than the full width of the page. */
+.comment-text {
+  max-width: 36em;
+  font-family: var(--font-serif); font-size: 1.125rem; line-height: 1.6; font-variation-settings: 'opsz' 16;
+  overflow-wrap: anywhere; white-space: pre-line;
+}
 .comment-text p + p { margin-top: 0.8em; }
 .comment-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); margin: var(--space-2) 0 0 calc(-1 * var(--space-2)); }
 .comment-actions .subtle { margin-left: auto; }
 .confirm-inline { display: inline-flex; align-items: center; gap: var(--space-1); padding-left: var(--space-2); font-size: var(--text-meta); color: var(--danger); }
 .comment.is-gone { padding-block: var(--space-4); }
-.comment.is-gone .meta { font-style: italic; font-family: var(--font-serif); font-size: var(--text-ui); }
+.comment.is-gone .meta { font-family: var(--font-mono); color: var(--ink-3); }
 .comment.is-folded .folded-text { color: var(--ink-3); font-size: var(--text-ui); margin-bottom: var(--space-1); }
 .comment.is-folded .btn-quiet { padding-left: 0; min-height: 2.25rem; }
 .replies { margin-left: var(--space-3); padding-left: var(--space-5); border-left: var(--hairline) solid var(--rule); }
 .replies .comment-text { font-size: 1.0625rem; }
+.replies .comment:first-child { padding-top: var(--space-3); }
 @media (max-width: 30rem) { .replies { margin-left: 0; padding-left: var(--space-4); } }
 
 /* Spoiler: a redaction bar, revealed on demand */
@@ -346,11 +607,19 @@ legend { margin-bottom: var(--space-2); padding: 0; }
 .report .btn { justify-self: start; }
 
 /* ═══ Footer ═════════════════════════════════════════════════════════════ */
-.footer { background: var(--surface-sunk); border-top: var(--hairline) solid var(--rule); }
+.footer {
+  background-color: var(--surface-sunk); background-image: var(--grain);
+  border-top: var(--hairline) solid var(--rule);
+}
 .footer-inner { display: grid; grid-template-columns: auto 1fr auto; align-items: start; gap: var(--space-5) var(--space-7); padding-block: var(--space-7); }
 .footer-title-note { max-width: 32em; font-family: var(--font-serif); font-size: var(--text-ui); line-height: 1.55; color: var(--ink-2); }
 .footer-links { display: flex; gap: var(--space-4); font-size: var(--text-meta); }
-.footer-links a { color: var(--ink-2); text-decoration: none; min-height: 1.5rem; }
+/* The footer keeps its compact measure, but each link's hit area is grown to a
+   full touch target with an overlay rather than by padding the row out. */
+.footer-links a { position: relative; display: inline-flex; align-items: center; min-height: 1.5rem; color: var(--ink-2); text-decoration: none; }
+.footer-links a::after, .footer-title-note a::after { content: ''; position: absolute; left: -0.35rem; right: -0.35rem; top: 50%; height: 2.75rem; transform: translateY(-50%); }
 .footer-links a:hover { color: var(--ink); text-decoration: underline; }
+.footer .wordmark-small { position: relative; min-height: 1.5rem; }
+.footer .wordmark-small::after { content: ''; position: absolute; left: 0; right: var(--space-6); top: 50%; height: 2.75rem; transform: translateY(-50%); }
 .footer-fine { grid-column: 1 / -1; font-family: var(--font-mono); font-size: var(--text-micro); color: var(--ink-3); letter-spacing: 0.02em; }
 @media (max-width: 48rem) { .footer-inner { grid-template-columns: 1fr; gap: var(--space-4); } }

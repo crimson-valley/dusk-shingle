@@ -10,9 +10,13 @@ import { PrivateNote } from '../components/PrivateNote';
 import { useReadingProgress } from '../hooks/useReadingProgress';
 import { useReader } from '../lib/reader';
 import { chapterNumber, readingMinutes } from '../lib/format';
+import { chapterTag } from '../content/catalog';
 import { wordCount } from '../content/chapters';
 
 type Props = { chapter?: Chapter; previous?: Chapter; next?: Chapter };
+
+/** The only progress a screen reader is told about, in quarter-chapter steps. */
+const ANNOUNCED = [0.25, 0.5, 0.75, 1];
 
 export function ChapterPage({ chapter, previous, next }: Props) {
   if (!chapter) return <UnavailableChapter />;
@@ -54,12 +58,16 @@ function ChapterReader({ chapter, previous, next }: Required<Pick<Props, 'chapte
   }
 
   const minutes = readingMinutes(wordCount(chapter));
+  const pct = Math.round(progress * 100);
+  const complete = Boolean(state?.completed) || progress >= 0.97;
 
   return (
     <>
       <ProgressBar value={progress} />
       <main id="main" className="chapter">
         <header className="prelude" aria-labelledby="chapter-title">
+          {/* The chapter number at scale, cropped by the band. Decorative. */}
+          <span className="prelude-watermark" aria-hidden="true">{chapterNumber(chapter.number)}</span>
           <div className="prelude-inner">
             <p className="prelude-number">Chapter {chapterNumber(chapter.number)}</p>
             <h1 id="chapter-title" className="prelude-title">{chapter.title}</h1>
@@ -84,23 +92,41 @@ function ChapterReader({ chapter, previous, next }: Required<Pick<Props, 'chapte
         )}
 
         <div className="prose-wrap" ref={article}>
+          {/* Front matter and a standing progress readout, only where there is
+              room beside the column. The same facts are stated in the prelude
+              and at the end of the chapter, so this is marked decorative
+              rather than announced twice. */}
+          <aside className="chapter-rail" aria-hidden="true">
+            <span className="rail-numeral">{chapterNumber(chapter.number)}</span>
+            <span className="rail-title">{chapter.title}</span>
+            <span className="rail-progress"><span className="rail-progress-fill" style={{ transform: `scaleY(${progress})` }} /></span>
+            <span className="rail-percent">{pct}%</span>
+          </aside>
           <ChapterBody blocks={chapter.blocks} />
         </div>
 
-        <section className="chapter-end" aria-labelledby="chapter-end-title">
-          <div className="end-mark" aria-hidden="true" />
-          <h2 id="chapter-end-title" className="meta-label">End of chapter {chapterNumber(chapter.number)}</h2>
-          <p className="chapter-end-status" aria-live="polite">
-            {state?.completed ? 'Marked as read.' : `${Math.round(progress * 100)}% read`}
-          </p>
-          <div className="chapter-end-actions">
-            {next ? (
-              <Link className="btn btn-primary" href={`/chapter/${next.slug}`}>Chapter {chapterNumber(next.number)} · {next.title}<Icon name="arrow-right" /></Link>
-            ) : (
-              <p className="meta">This is the latest published chapter.</p>
-            )}
-            <Link className="btn btn-secondary" href={`/chapter/${chapter.slug}/discussion`}>Discuss this chapter</Link>
+        <section className="chapter-end" data-complete={complete || undefined} aria-labelledby="chapter-end-title">
+          {/* The coda is centred because it is a closing marker, not content.
+              Everything after it is left-aligned prose, so the two never share
+              a line and the block cannot read as two alignments fighting. */}
+          <div className="chapter-coda">
+            <div className="end-mark" aria-hidden="true" />
+            <h2 id="chapter-end-title" className="meta-label">End of chapter {chapterNumber(chapter.number)}</h2>
+            <p className="chapter-end-status">
+              {complete ? 'Read' : `${pct}% read`}
+            </p>
+            {/* Progress is announced in quarters, not continuously: a live region
+                that fires on every scroll frame is unusable with a screen reader. */}
+            <ProgressAnnouncer progress={progress} />
+            <div className="chapter-end-actions">
+              {next ? (
+                <Link className="btn btn-primary" href={`/chapter/${next.slug}`}>Chapter {chapterNumber(next.number)} · {next.title}<Icon name="arrow-right" /></Link>
+              ) : (
+                <p className="meta">This is the latest published chapter.</p>
+              )}
+            </div>
           </div>
+          <ChapterDiscussion chapter={chapter} />
           <PrivateNote slug={chapter.slug} />
         </section>
 
@@ -108,6 +134,14 @@ function ChapterReader({ chapter, previous, next }: Required<Pick<Props, 'chapte
       </main>
       <PublicationFooter />
     </>
+  );
+}
+
+function ProgressAnnouncer({ progress }: { progress: number }) {
+  const step = ANNOUNCED.reduce((last, s) => (progress >= s ? s : last), 0);
+  const label = step === 0 ? 'Not started' : step === 1 ? 'Chapter finished' : `${Math.round(step * 100)}% read`;
+  return (
+    <p className="visually-hidden" aria-live="polite" aria-atomic="true">{label}</p>
   );
 }
 
@@ -119,5 +153,26 @@ function UnavailableChapter() {
       <p className="standalone-text">It may not be published yet, or the address may be mistyped. Nothing on this site links to unpublished chapters.</p>
       <Link className="btn btn-secondary" href="/"><Icon name="arrow-left" />Return to the library</Link>
     </main>
+  );
+}
+
+/**
+ * The bridge from a chapter into the wider community. It opens that chapter's
+ * own discussion — the same thread, whether it was opened from here or from
+ * the community — and points onward to everything else readers are discussing.
+ */
+function ChapterDiscussion({ chapter }: { chapter: Chapter }) {
+  return (
+    <section className="chapter-discussion" aria-labelledby="chapter-discussion-title">
+      <h2 id="chapter-discussion-title" className="meta-label">Community</h2>
+      <p className="chapter-discussion-text">
+        Chapter {chapterNumber(chapter.number)} has one discussion of its own, and readers write about it alongside
+        everything else in the book — theories, characters, the world, questions.
+      </p>
+      <div className="row-actions">
+        <Link className="btn btn-secondary" href={`/chapter/${chapter.slug}/discussion`}>Discuss this chapter</Link>
+        <Link className="btn btn-quiet" href={`/community/t/${chapterTag(chapter.number)}`}>Other threads tagged Chapter {chapterNumber(chapter.number)}</Link>
+      </div>
+    </section>
   );
 }

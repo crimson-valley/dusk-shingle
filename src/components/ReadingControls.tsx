@@ -1,9 +1,10 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Icon } from './Icon';
 import { useReader } from '../lib/reader';
-import type { FontSize, Measure, Theme } from '../lib/readerState';
+import { defaultPreferences, type FontSize, type Measure, type Theme } from '../lib/readerState';
 
 const SIZES: FontSize[] = ['small', 'standard', 'large', 'larger'];
+const SIZE_LABELS: Record<FontSize, string> = { small: 'Small', standard: 'Standard', large: 'Large', larger: 'Largest' };
 
 export function ReadingControls() {
   const { prefs, setPrefs } = useReader();
@@ -29,7 +30,10 @@ export function ReadingControls() {
     };
   }, [open]);
 
-  const sizeIndex = SIZES.indexOf(prefs.fontSize);
+  const isDefault =
+    prefs.theme === defaultPreferences.theme &&
+    prefs.fontSize === defaultPreferences.fontSize &&
+    prefs.measure === defaultPreferences.measure;
 
   return (
     <div className="controls" ref={root}>
@@ -45,33 +49,43 @@ export function ReadingControls() {
             options={[['auto', 'Auto'], ['paper', 'Paper'], ['dusk', 'Dusk']]}
             onChange={(theme) => setPrefs({ theme })}
           />
-          <div className="control-row">
-            <span className="control-label" id={`${panelId}-size`}>Text size</span>
-            <div className="stepper" role="group" aria-labelledby={`${panelId}-size`}>
-              <button type="button" disabled={sizeIndex <= 0} onClick={() => setPrefs({ fontSize: SIZES[sizeIndex - 1] })} aria-label="Smaller text">A−</button>
-              <output aria-live="polite">{prefs.fontSize}</output>
-              <button type="button" disabled={sizeIndex >= SIZES.length - 1} onClick={() => setPrefs({ fontSize: SIZES[sizeIndex + 1] })} aria-label="Larger text">A+</button>
-            </div>
-          </div>
+          <Segmented<FontSize>
+            className="segmented-sizes"
+            label="Text size"
+            value={prefs.fontSize}
+            /* Each step is shown at the size it sets, so the choice is made by
+               looking at it rather than by remembering what “larger” meant. */
+            options={SIZES.map((s) => [s, SIZE_LABELS[s]] as [FontSize, string])}
+            onChange={(fontSize) => setPrefs({ fontSize })}
+          />
           <Segmented<Measure>
             label="Line length"
             value={prefs.measure}
             options={[['narrow', 'Narrow'], ['standard', 'Standard'], ['wide', 'Wide']]}
             onChange={(measure) => setPrefs({ measure })}
           />
-          <p className="controls-foot">Motion follows your system setting.</p>
+          <p className="controls-foot">
+            <span>Motion follows your system setting.</span>
+            <button type="button" className="text-btn controls-reset" disabled={isDefault} onClick={() => setPrefs(defaultPreferences)}>
+              Reset
+            </button>
+          </p>
         </div>
       )}
     </div>
   );
 }
 
-function Segmented<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: [T, string][]; onChange: (v: T) => void }) {
+function Segmented<T extends string>({
+  label, value, options, onChange, className,
+}: {
+  label: string; value: T; options: [T, string][]; onChange: (v: T) => void; className?: string;
+}) {
   const id = useId();
   return (
     <div className="control-row">
       <span className="control-label" id={id}>{label}</span>
-      <div className="segmented" role="radiogroup" aria-labelledby={id}>
+      <div className={className ? `segmented ${className}` : 'segmented'} role="radiogroup" aria-labelledby={id}>
         {options.map(([v, text]) => (
           <button key={v} type="button" role="radio" aria-checked={value === v} onClick={() => onChange(v)}>{text}</button>
         ))}

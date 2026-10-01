@@ -10,7 +10,9 @@ describe('publication name note', () => {
     const html = renderToString(createElement(TitleNote));
 
     expect(html).toContain(publication.titleNoteLabel);
-    expect(html).toContain(`${publication.title}</em> is the name of this website`);
+    // <cite>, not <em>: the publication's name is a work's title, and no
+    // italic cut of the serif is loaded.
+    expect(html).toContain(`${publication.title}</cite> is the name of this website`);
     expect(html).toContain('the name of the project under which this novel belongs');
     expect(html).toContain('It is not the name of the novel itself.');
     expect(html).toContain('The novel’s true name will be revealed in due time.');
@@ -19,7 +21,7 @@ describe('publication name note', () => {
   it('carries a compact version of the note in the public footer', () => {
     const html = renderToString(createElement(PublicationFooter));
 
-    expect(html).toContain(`${publication.title}</em> is the name of the project under which this novel belongs`);
+    expect(html).toContain(`${publication.title}</cite> is the name of the project under which this novel belongs`);
     expect(html).toContain('the novel’s true name will be revealed in due time.');
   });
 });

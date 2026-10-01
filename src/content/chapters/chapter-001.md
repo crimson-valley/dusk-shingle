@@ -1,3 +1,13 @@
+---
+title: "Chapter 001 — The Dry Pump"
+type: reference
+status: active
+project: "dusk-shingle"
+tags: [fiction, chapter, content]
+created: "2026-09-19"
+published: "2026-09-26"
+---
+
 # CHAPTER 001 — THE DRY PUMP
 
 **Published:** 26 September 2026
