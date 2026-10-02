@@ -401,10 +401,6 @@ legend { margin-bottom: var(--space-2); padding: 0; }
 .segmented-sizes button:nth-child(2) { font-size: 1rem; }
 .segmented-sizes button:nth-child(3) { font-size: 1.1875rem; }
 .segmented-sizes button:nth-child(4) { font-size: 1.375rem; }
-.stepper { display: grid; grid-template-columns: 2.75rem 1fr 2.75rem; align-items: center; border: var(--hairline) solid var(--rule); border-radius: var(--radius-1); }
-.stepper button { height: 2.5rem; font-family: var(--font-serif); font-size: 1.05rem; color: var(--ink); }
-.stepper button:disabled { color: var(--ink-3); opacity: 0.5; }
-.stepper output { text-align: center; font-family: var(--font-mono); font-size: var(--text-meta); color: var(--ink-2); text-transform: capitalize; }
 .controls-foot { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); padding-top: var(--space-3); font-size: var(--text-micro); color: var(--ink-3); }
 .controls-reset { color: var(--ink-3); text-decoration: underline; text-underline-offset: 0.2em; }
 .controls-reset:hover { color: var(--ink); }
